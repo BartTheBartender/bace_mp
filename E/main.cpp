@@ -5,7 +5,7 @@
 #include <iostream>
 #include <iomanip>
 using namespace std;
-typedef double num;
+typedef long double num;
 
 class Jet {
   num v;
@@ -95,12 +95,11 @@ public:
     return f + r;
   }
 
-  friend Jet operator-(const Jet& f, const num r){
-    return Jet(f.v - r, f.x, f.y, f.xx, f.xy, f.yy);
+  friend Jet operator+(const Jet& f, const num r){
+    return f + (-r);
   }
-
   friend inline Jet operator-(const num r, const Jet& f) {
-    return f - r;
+    return r + (-f)
   }
 
   friend Jet operator*(const Jet& f, const Jet& g) {
@@ -175,15 +174,15 @@ Jet eval(num x, num y){
 }
 
 int main () {
-  /* cout << std::setprecision(4); */
-  /* std::cout.setf(std::ios::fixed, std::ios::floatfield); */
+  std::cout.setf(std::ios::fixed, std::ios::floatfield);
+  cout << std::setprecision(6);
   size_t n;
   cin >> n;
   num x,y;
   for(size_t i = 0; i < n; ++i){
     cin >> x >> y;
-    cout << "x: " << x << " y: " << y << endl;
-    /* cout << eval(x,y) << endl; */
+    /* cout << "x: " << x << " y: " << y << endl; */
+    cout << eval(x,y) << endl;
   }
   return 0;
 }
