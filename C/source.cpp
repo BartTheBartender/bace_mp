@@ -116,12 +116,53 @@ int findSurface(FuncPointer f,
 
 int findFixedPoints(FuncPointer f, double* x, unsigned k1, unsigned k2, double h1, double h2) {
 
-  double y[1];
-  double Df[1*3];
+  double y[2];
+  double Df[2*4];
   double u[4];
-  double df;
-
-  /* for(unsigned i1 = ; i1 */
+  double det, d00, d01, d10, d11;
   
+  u[2] = x[2];
+
+  for(unsigned i1 = 1; i1 <= k1; ++i1) {
+
+    u[3] = x[3];
+    u[2] += h1;
+
+    for(unsigned i2 = 1; i2 <= k2; ++i2) {
+
+      u[3] += h2;
+      u[0] = x[0];
+      u[1] = x[1];
+
+      for(unsigned _ = 0; _ < 10000; ++_) {
+
+        f(u,y,Df);
+
+        if(fabs(y[0]-u[0]) < 1e-14 && fabs(y[1]-u[1]) < 1e-14)
+          break;
+
+        //d(f-id) = df - I
+        d00 = Df[0]-1;
+        d01 = Df[1];
+        d10 = Df[4];
+        d11 = Df[5] - 1;
+        det = d00 * d11 - d01 * d10;
+
+        if(det == 0 || !is_correct(y,2))
+          return i1*k1+i2;
+        
+        u[0] -=  (d11 * (y[0] - u[0]) - d01 * (y[1] - u[1])) / det;
+        u[1] -= (-d10 * (y[0] - u[0]) + d00 * (y[1] - u[1])) / det;
+
+      }
+
+      if(fabs(y[0]-u[0]) < 1e-14 && fabs(y[1]-u[1]) < 1e-14)
+        print_vector(u,4);
+      else
+        return i1*k1+i2;
+    }
+  }
+  
+  return 0;
 }
 
