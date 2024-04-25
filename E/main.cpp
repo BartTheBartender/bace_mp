@@ -1,188 +1,167 @@
 //Bartosz Furmanek
-#include "funkcja.h"
 #include <cassert>
 #include <cmath>
 #include <iostream>
 #include <iomanip>
+#include "funkcja.h"
 using namespace std;
+
 typedef long double num;
 
 class Jet {
-  num v;
-  num x;
-  num y;
-  num xx;
-  num xy;
-  num yy;
-
-  Jet(const num v, const num x, const num y, const num xx, const num xy, const num yy): v(v), x(x), y(y), xx(xx), xy(xy), yy(yy) {}
-
-  static Jet inverse(const Jet& f) {
-    return Jet(
-        1/f.v, -f.x/(f.v * f.v),
-        -f.y/(f.v * f.v),
-        (2 * f.x * f.x - f.xx * f.v)/(f.v * f.v * f.v),
-        (2 * f.x * f.y - f.xy * f.v)/(f.v * f.v * f.v),
-        (2 * f.y * f.y - f.yy * f.v)/(f.v * f.v * f.v)
-    );
-  }
-
+    num v, x, y, xx, xy, yy;
+    explicit Jet(const num v, const num x, const num y,
+        const num xx, const num xy, const num yy):
+        v(v), x(x), y(y), xx(xx), xy(xy), yy(yy) {}
+    explicit Jet(const num c) : Jet(c,0,0,0,0,0) {}
 public:
+    Jet(): Jet(0, 0, 0, 0, 0, 0) {}
 
-  Jet(): v(0), x(0), y(0), xx(0), xy(0), yy(0) {}
-  Jet(const Jet& f): v(f.v), x(f.x), y(f.y), xx(f.xx), xy(f.xy), yy(f.yy) {}
-  Jet& operator=(const Jet& f) {
-    v = f.v; x = f.x; y = f.y; xx = f.xx; xy = f.xy; yy = f.yy;
-    return *this;
-  }
+    Jet(const Jet& f): Jet(f.v, f.x, f.y, f.xx, f.xy, f.yy) {}
 
-  static Jet from_x(num r) {
-    return Jet(r,1,0,0,0,0);
-  }
+    Jet& operator=(const Jet&f){
+        v = f.v; x = f.x; y = f.y;
+        xx = f.xx; xy = f.xy; yy = f.yy;
+        return *this;
+    }
 
-  static Jet from_y(num r){
-    return Jet(r,0,1,0,0,0);
-  }
+    static Jet from_x(const num x) {
+        return Jet(x, 1, 0, 0, 0, 0);
+    }
 
-  friend ostream& operator<<(ostream& out, const Jet& f) {
-    out << f.v
-        << " " << f.x
-        << " " << f.y
-        << " " << f.xx
-        << " " << f.xy
-        << " " << f.yy;
-   return out;
-  }
+    static Jet from_y(const num y) {
+        return Jet(y, 0, 1, 0, 0, 0);
+    }
 
-  friend Jet operator+(const Jet& f, const Jet& g) {
-    return Jet(
-      f.v + g.v,
-      f.x + g.x,
-      f.y + g.y,
-      f.xx + g.xx,
-      f.xy + g.xy,
-      f.yy + g.yy
-    );
-  }
 
-  friend Jet operator-(const Jet& f, const Jet& g) {
-    return Jet(
-      f.v - g.v,
-      f.x - g.x,
-      f.y - g.y,
-      f.xx - g.xx,
-      f.xy - g.xy,
-      f.yy - g.yy
-    );
-  }
+    friend ostream& operator<<(ostream& out, const Jet& f) {
+        out << "f.v: " << f.v << " f.x: " << f.x << " f.y: " << f.y << " f.xx: "
+            << f.xx << " f.xy: " << f.xy << " f.yy: " << f.yy;
+        /* out << f.v << " " << f.x << " " << f.y << " " */
+        /*     << f.xx << " " << f.xy << " " << f.yy; */
+        return out;
+    }
+  
 
-  friend Jet operator-(const Jet& g) {
-    return Jet(
-      - g.v,
-      - g.x,
-      - g.y,
-      - g.xx,
-      - g.xy,
-      - g.yy
-    );
-  }
 
-  friend Jet operator+(const Jet& f, const num r){
-    return Jet(f.v + r, f.x, f.y, f.xx, f.xy, f.yy);
-  }
+    friend inline Jet operator+(const Jet& f, const Jet& g) {
+      return Jet(f.v + g.v, f.x + g.x, f.y + g.y,
+                f.xx + g.xx, f.xy + g.xy, f.yy + g.yy);
+    }
 
-  friend inline Jet operator+(const num r, const Jet& f) {
-    return f + r;
-  }
+    friend inline Jet operator-(const Jet& f, const Jet& g) {
+      return Jet(f.v - g.v, f.x - g.x, f.y - g.y,
+                f.xx - g.xx, f.xy - g.xy, f.yy - g.yy);
+    }
 
-  friend Jet operator+(const Jet& f, const num r){
-    return f + (-r);
-  }
-  friend inline Jet operator-(const num r, const Jet& f) {
-    return r + (-f)
-  }
+    friend inline Jet operator-(const Jet& f) {
+      return (-1) * f;
+    }
 
-  friend Jet operator*(const Jet& f, const Jet& g) {
-    return Jet(
-        f.v * g.v,
-        f.x * g.v + f.v * g.x,
-        f.y * g.v + f.v * g.y,
-        f.xx * g.v + 2 * f.x * g.x + f.v * g.xx,
-        f.xy * g.v + f.x * g.y + f.y * g.x + f.v * g.xy,
-        f.yy * g.v + 2 * f.y * g.y + f.v * g.yy
-    );
-  }
+    friend inline Jet operator+(const Jet& f, const num c) {
+      return f + Jet(c);
+    }
 
-  friend Jet operator*(const Jet& f, const num r) {
-    return Jet(f.v * r, f.x * r, f.y * r, f.xx * r, f.xy * r, f.yy * r);
-  }
+    friend inline Jet operator-(const num c, const Jet& f) {
+      return c + (-f);
+    }
 
-  inline friend Jet operator*(const num r, const Jet& f){
-    return f*r;
-  }
+    friend inline Jet operator-(const Jet& f, const num c) {
+      return f + (-c);
+    }
 
-  inline friend Jet operator/(const Jet& f, const Jet& g) {
-    return f * Jet::inverse(g);
-  }
+    friend inline Jet operator+(const num c, const Jet& f) {
+      return f + c;
+    }
 
-  inline friend Jet operator/(const Jet& f, const num r) {
-    return f * (1/r);
-  }
 
-  inline friend Jet operator/(const num r, const Jet& f) {
-    return r * Jet::inverse(f);
-  }
+    friend inline Jet operator*(const Jet& f, const Jet& g) {
+      return Jet(f.v * g.v,
+                f.x * g.v + f.v * g.x,
+                f.y * g.v + f.v * g.y,
+                f.xx * g.v + 2 * (f.x * g.x) + f.v * g.xx,
+                f.xy * g.v + f.x * g.y + f.y * g.x + f.v * g.xy,
+                f.yy * g.v + 2 * (f.y * g.y) + f.v * g.yy);
+    }
+    
+    friend inline Jet operator*(const Jet& f, const num c) {
+      return Jet(f.v * c, f.x * c, f.y * c,
+              f.xx * c, f.xy * c, f.yy * c);
+    }
 
-  friend Jet sin(const Jet& f) {
-    return Jet (
-        sin(f.v),
-        f.x * cos(f.v),
-        f.y * cos(f.v),
-        f.xx * cos(f.v) - f.x * f.x * sin(f.v),
-        f.xy * cos(f.v) - f.x * f.y * sin(f.v),
-        f.yy * cos(f.v) - f.y * f.y * sin(f.v)
-    );
-  }
+    friend inline Jet operator*(const num c, const Jet& f) {
+      return f * c;
+    }
 
-  friend Jet cos(const Jet& f) {
-    return Jet (
-        cos(f.v),
-        -f.x * sin(f.v),
-        -f.y * sin(f.v),
-        -f.xx * sin(f.v) + f.x * f.x * sin(f.v),
-        -f.xy * sin(f.v) + f.x * f.y * sin(f.v),
-        -f.yy * sin(f.v) + f.y * f.y * sin(f.v)
-    );
-  }
+    friend inline Jet operator/(const Jet& f, const num c) {
+        assert(false);
+      assert(c != 0);
+      return f * (1/c);
+    }
 
-  friend Jet exp(const Jet& f) {
-    return Jet (
-        exp(f.v),
-        f.x * exp(f.v),
-        f.y * exp(f.v),
-        f.xx * exp(f.v) + f.x * f.x * exp(f.v),
-        f.xy * exp(f.v) + f.x * f.y * exp(f.v),
-        f.yy * exp(f.v) + f.y * f.y * exp(f.v)
-    );
-  }
+    friend inline Jet operator/(const num c, const Jet& f) {
+      assert(f.v != 0);
+      return Jet(c)/f;
+    }
 
+    friend inline Jet operator/(const Jet& f, const Jet& g) {
+      assert(g.v != 0);
+      num inv_v = 1 / g.v;
+      num inv_v_squared = inv_v * inv_v;
+      num inv_v_cubed = inv_v_squared * inv_v;
+      return Jet(f.v * inv_v,
+                (f.x - f.v * g.x * inv_v) * inv_v,
+                (f.y - f.v * g.y * inv_v) * inv_v,
+                (f.xx - (2 * f.x * g.x + f.v * g.xx) * inv_v_squared + 2 * f.v * g.x * g.x * inv_v_cubed),
+                (f.xy - (f.x * g.y + f.y * g.x + f.v * g.xy) * inv_v_squared + f.v * g.x * g.y * inv_v_cubed + f.v * g.y * g.x * inv_v_cubed),
+                (f.yy - (2 * f.y * g.y + f.v * g.yy) * inv_v_squared + 2 * f.v * g.y * g.y * inv_v_cubed));
+    }
+
+
+
+    friend inline Jet sin(const Jet& f) {
+        return Jet(sin(f.v),
+                   f.x * cos(f.v),
+                   f.y * cos(f.v),
+                   f.xx * cos(f.v) - f.x * sin(f.v),
+                   f.xy * cos(f.v) - f.y * sin(f.v),
+                   f.yy * cos(f.v));
+    }
+
+    friend inline Jet cos(const Jet& f) {
+        return Jet(cos(f.v),
+                   -f.x * sin(f.v),
+                   -f.y * sin(f.v),
+                   -f.xx * sin(f.v) - f.x * cos(f.v),
+                   -f.xy * sin(f.v) - f.y * cos(f.v),
+                   -f.yy * sin(f.v));
+    }
+
+    friend inline Jet exp(const Jet& f) {
+        num exp_v = exp(f.v);
+        return Jet(exp_v,
+                   f.x * exp_v,
+                   f.y * exp_v,
+                   f.xx * exp_v,
+                   f.xy * exp_v,
+                   f.yy * exp_v);
+    }
+    
 };
 
-
-Jet eval(num x, num y){
-  return funkcja(Jet::from_x(x), Jet::from_y(y));
+Jet eval(const num x, const num y) {
+    return funkcja(Jet::from_x(x), Jet::from_y(y));
 }
 
-int main () {
-  std::cout.setf(std::ios::fixed, std::ios::floatfield);
-  cout << std::setprecision(6);
+int main(){
+   /* cout << fixed << setprecision(15); */
+   cout << fixed << setprecision(3);
   size_t n;
   cin >> n;
   num x,y;
-  for(size_t i = 0; i < n; ++i){
+  for(size_t _ = 0; _ < n; ++_){
     cin >> x >> y;
-    /* cout << "x: " << x << " y: " << y << endl; */
     cout << eval(x,y) << endl;
   }
-  return 0;
 }
+
