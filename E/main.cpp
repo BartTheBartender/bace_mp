@@ -1,10 +1,11 @@
+//Bartosz Furmanek
 #include <cassert>
 #include <cmath>
 #include <iostream>
 #include <iomanip>
 #include "funkcja.h"
+#include <utility>
 using namespace std;
-
 typedef long double num;
 
 class Jet {
@@ -13,6 +14,7 @@ class Jet {
       const num xx, const num xy, const num yy):
       v(v), x(x), y(y), xx(xx), xy(xy), yy(yy) {}
   explicit Jet(const num c) : Jet(c,0,0,0,0,0) {}
+
 public:
   Jet(): Jet(0, 0, 0, 0, 0, 0) {}
 
@@ -22,7 +24,7 @@ public:
     v = f.v; x = f.x; y = f.y; xx = f.xx; xy = f.xy; yy = f.yy;
       return *this;
   }
-
+  
 
   static Jet from_x(const num x) {
     return Jet(x, 1, 0, 0, 0, 0);
@@ -75,6 +77,7 @@ public:
 
 
   friend inline Jet operator*(const Jet& f, const Jet& g) {
+
     return Jet(f.v * g.v,
                 f.x * g.v + f.v * g.x,
                 f.y * g.v + f.v * g.y,
@@ -104,13 +107,21 @@ public:
 
     friend inline Jet operator/(const Jet& f, const Jet& g) {
       assert(g.v != 0);
-      return Jet(f.v/g.v,
-          f.x/g.v - (f.v * g.x)/(g.v * g.v),
-          f.y/g.v - (f.v * g.y)/(g.v * g.v),
-          f.xx/g.v - (f.v * g.xx + 2 * f.x * g.x)/(g.v * g.v) + 2 * (f.v * g.x * g.x) /(g.v * g.v * g.v),
-          0,
-          /* f.xx/g.v - (f.v * g.xx + 2 * f.x * g.x)/(g.v * g.v) + 2 * (f.v * g.x * g.x) /(g.v * g.v * g.v), */
-          f.yy/g.v - (f.v * g.yy + 2 * f.y * g.y)/(g.v * g.v) + 2 * (f.v * g.y * g.y) /(g.v * g.v * g.v));
+
+      num g_2 = g.v * g.v;
+
+      num q_x = (f.x * g.v - f.v * g.x) / g_2;
+      num q_y = (f.y * g.v - f.v * g.y) / g_2;
+
+      num q_xx = f.xx/g.v - (f.v * g.xx) / g_2 - 2 * q_x * g.x / g.v;
+      num q_yy = f.yy/g.v - (f.v * g.yy) / g_2 - 2 * q_y * g.y / g.v;
+
+      num q_xy = f.xy / g.v + (f.x * g.y - f.y * g.x - f.v * g.xy) / g_2 - 2 * q_x * g.y / g.v;
+
+      num q_yx = f.xy / g.v + (f.y * g.x - f.x * g.y - f.v * g.xy) /g_2 - 2 * q_y * g.x / g.v;
+
+
+      return Jet(f.v/g.v, q_x, q_y, q_xx, (q_xy + q_yx)/2, q_yy);
 
     }
 
@@ -120,28 +131,31 @@ public:
         return Jet(sin(f.v),
                    f.x * cos(f.v),
                    f.y * cos(f.v),
-                   f.xx * cos(f.v) - f.x * sin(f.v),
-                   f.xy * cos(f.v) - f.y * sin(f.v),
-                   f.yy * cos(f.v));
+                   f.xx * cos(f.v) - f.x * f.x * sin(f.v),
+                   f.xy * cos(f.v) - f.x * f.y * sin(f.v),
+                   f.yy * cos(f.v) - f.y * f.y * sin(f.v)
+        );
     }
 
     friend inline Jet cos(const Jet& f) {
         return Jet(cos(f.v),
                    -f.x * sin(f.v),
                    -f.y * sin(f.v),
-                   -f.xx * sin(f.v) - f.x * cos(f.v),
-                   -f.xy * sin(f.v) - f.y * cos(f.v),
-                   -f.yy * sin(f.v));
+                   -f.xx * sin(f.v) - f.x * f.x * cos(f.v),
+                   -f.xy * sin(f.v) - f.x * f.y * cos(f.v),
+                   -f.yy * sin(f.v) - f.y * f.y * cos(f.v)
+        );
     }
 
     friend inline Jet exp(const Jet& f) {
-        num exp_v = exp(f.v);
-        return Jet(exp_v,
-                   f.x * exp_v,
-                   f.y * exp_v,
-                   f.xx * exp_v,
-                   f.xy * exp_v,
-                   f.yy * exp_v);
+        num exp_f = exp(f.v);
+        return Jet(exp_f,
+                   exp_f * f.x,
+                   exp_f * f.y,
+                   exp_f * (f.xx + f.x * f.x),
+                   exp_f * (f.xy + f.x * f.y),
+                   exp_f * (f.yy + f.y * f.y)
+        );
     }
     
 };
@@ -151,7 +165,7 @@ Jet eval(const num x, const num y) {
 }
 
 int main(){
-   cout << fixed << setprecision(15);
+   cout << fixed << setprecision(16);
    /* cout << fixed << setprecision(3); */
   size_t n;
   cin >> n;
