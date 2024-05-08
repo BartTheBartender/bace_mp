@@ -1,9 +1,12 @@
 //Bartosz Furmanek
 #include <cassert>
 #include <iostream>
+#include <cmath>
+#include <string>
 using namespace std;
 
-
+void d(){cout << "here" << endl;}
+void d(const string& s){cout << s << endl;}
 double findZero (
     double (*f)(double),  // funkcja której zera szukamy w [a, b] 
     double a,             // lewy koniec przedziału
@@ -12,7 +15,7 @@ double findZero (
     double eps,           // spodziewana dokładność zera
     double delta          // wystarczający błąd bezwzględny wyniku
 ) {
-  int i = 0;
+  int i = 2;
   double fa = f(a);
   double fb = f(b);
 
@@ -25,78 +28,77 @@ double findZero (
 
   while (i < M && fa * fb > 0) {
     //Secant method
-    c = a - fa * (a-b)/(fa - fb);
+    c = a - fa * ((a-b)/(fa - fb));
     fc = f(c);
     ++i;
 
-    /* cout << "a: " << a << " b: " << b << " c: " << c << endl; */
-
     if (fabs(fc) < eps) {
       return c;
-    } else if (fa * fc < 0) {
-      b = c;
-      fb = fc;
-    } else if (fb * fc < 0) {
-      a = c;
-      fa = fc;
-    } else if (fabs(a-c) < fabs(b-c)) {
-      b = c;
-      fb = fc;
-    } else {
-      a = c;
-      fa = fc;
-    }
+    } 
+
+    a = b;
+    fa = fb;
+    b = c;
+    fb = fc;
+
   }
-  /* cout << i << "/" << M << endl; */
+
   assert(fa * fb < 0);
+  if(a >= b) {
+    c = a;
+    a = b;
+    b = c;
 
-  double delta1 = 10e12*delta;
-  /* cout << delta1 << endl; */
+    fc = fa;
+    fa = fb;
+    fb = fc;
+  }
+  assert(a < b);
+  double delta1 = 0.01;
+  while(i < M && fabs(a-b) >= delta && fabs(fa) >= eps && fabs(fb) >= eps) {
+    
+    if(fabs(a-b) >= delta1) {
+      //Bisection method
+      /* d("bisection"); */
+      c = (a+b)/2;
+      fc = f(c);
+      ++i;
+  
+      if(fabs(fc) < eps)
+        return c;
+      
+      if(fa * fc < 0){
+        b = c;
+        fb = fc;
+      } else {
+        a = c;
+        fa = fc;
+      }
+      assert(fa * fb < 0);
+    } else {
+      /* d("secant"); */
+      //Secant method again
+      c = a - fa * ((a-b)/(fa - fb));
+      fc = f(c);
+      ++i;
 
-  while (i < M && fabs(a-b) >= delta1) {
-    //Bisection method
-    /* cout << "a: " << a << " b: " << b << endl; */
-    c = (a+b)/2;
-    fc = f(c);
-    ++i;
+      if (fabs(fc) < eps) {
+        return c;
+      } 
 
-    if (fabs(fc) < eps) {
-      return c;
-    } else if (fc * fa < 0) {
+      a = b;
+      fa = fb;
       b = c;
       fb = fc;
-    } else if (fc * fb < 0) {
-      a = c;
-      fa = fc;
-    } else {
-      assert(!"Not possible in bisection method");
     }
   }
-  cout << i << "/" << M << endl;
 
-  while(i < M && fabs(a-b) >= delta) {
-    //Secant method
-    c = a - fa * (a-b)/(fa - fb);
-    fc = f(c);
-    ++i;
-
-    cout << "a: " << a << " b: " << b << " c: " << c << endl;
-
-    if (fabs(fc) < eps) {
-      return c;
-    } else if (fa * fc < 0) {
-      b = c;
-      fb = fc;
-    } else if (fb * fc < 0) {
-      a = c;
-      fa = fc;
-    } else {
-      assert(!"Not possible in secant method");
-    }
-  }
-  cout << i << "/" << M << endl;
-
-  return NAN;
+  /* assert(i < M); */
+  
+  if(fabs(fa) < eps)
+    a = b;
+  return b;
+  
 }
 
 

@@ -25,7 +25,6 @@ public:
       return *this;
   }
   
-
   static Jet from_x(const num x) {
     return Jet(x, 1, 0, 0, 0, 0);
   }
@@ -34,7 +33,6 @@ public:
       return Jet(y, 0, 1, 0, 0, 0);
   }
 
-
   friend ostream& operator<<(ostream& out, const Jet& f) {
       /* out << "f.v: " << f.v << " f.x: " << f.x << " f.y: " << f.y << " f.xx: " */
       /*     << f.xx << " f.xy: " << f.xy << " f.yy: " << f.yy; */
@@ -42,8 +40,6 @@ public:
           << f.xx << " " << f.xy << " " << f.yy;
       return out;
   }
-  
-
 
   friend inline Jet operator+(const Jet& f, const Jet& g) {
     return Jet(f.v + g.v, f.x + g.x, f.y + g.y,
