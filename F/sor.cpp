@@ -48,7 +48,7 @@ Vector GaussSeidel(const Matrix &A, const Vector &b, const Vector & _x0, int M) 
     }
     return x0;
 }
-Vector SOR(const Matrix &A, const Vector &b, const Vector & _x0, int M, double w ) {// Jacobi
+Vector SOR(const Matrix &A, const Vector &b, const Vector & _x0, int M, double w ) {
     Vector x0 = _x0;
     auto n = A.size();
 
